@@ -1,13 +1,21 @@
 "use client"
 
 import type React from "react"
-import { CopilotChat } from "@copilotkit/react-ui"
+import dynamic from "next/dynamic"
 
 
 interface PromptPanelProps {
   availableCash: number
 }
 
+// Dynamically import CopilotChat with SSR disabled to prevent hydration mismatches
+const DynamicCopilotChat = dynamic(
+  () => import("@copilotkit/react-ui").then(mod => mod.CopilotChat),
+  {
+    ssr: false,
+    loading: () => <div className="h-[78vh] p-2 flex items-center justify-center text-gray-500">Loading chat...</div>
+  }
+)
 
 
 export function PromptPanel({ availableCash }: PromptPanelProps) {
@@ -45,7 +53,7 @@ export function PromptPanel({ availableCash }: PromptPanelProps) {
           <div className="text-sm font-semibold text-[#030507] font-['Roobert']">{formatCurrency(availableCash)}</div>
         </div>
       </div>
-      <CopilotChat className="h-[78vh] p-2" labels={
+      <DynamicCopilotChat className="h-[78vh] p-2" labels={
         {
           initial : `I am a Agno AI agent designed to analyze investment opportunities and track stock performance over time. How can I help you with your investment query? For example, you can ask me to analyze a stock like "Invest in Apple with 10k dollars since Jan 2023". \n\nNote: The AI agent has access to stock data from the past 4 years only`
         }

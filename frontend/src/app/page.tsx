@@ -114,7 +114,7 @@ export default function OpenStocksCanvas() {
 
   useCoAgentStateRender({
     name: "agnoAgent",
-    render: ({state}) => <ToolLogs logs={state.tool_logs} />
+    render: ({state}) => <ToolLogs logs={state.tool_logs || []} />
   })
 
 
