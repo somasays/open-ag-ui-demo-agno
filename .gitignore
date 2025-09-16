@@ -217,3 +217,7 @@ frontend/.next/
 
 # Claude artifacts
 .claude/
+
+# BMAD files
+*.bmad
+.bmad/

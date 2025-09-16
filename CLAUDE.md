@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Context7 Integration
+
+### Automatic Documentation Lookup
+**Always use Context7 MCP tools proactively** when working with:
+- Code generation requiring library documentation
+- Setup or configuration steps for new libraries
+- API documentation and usage examples
+- Framework-specific patterns and best practices
+
+When implementing features or fixing issues that involve external libraries:
+1. Automatically resolve library IDs using Context7 tools
+2. Fetch relevant documentation without explicit user request
+3. Use official documentation to ensure correct implementation
+4. Reference documentation sources in code comments when appropriate
+
+This proactive documentation lookup ensures accurate, up-to-date implementations based on official sources rather than assumptions.
+
 ## GitHub Workflow
 
 ### Important: Always Use GitHub CLI
