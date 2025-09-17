@@ -12,6 +12,8 @@ import { AllocationTableComponent } from "@/app/components/chart-components/allo
 import { useCopilotChatSuggestions } from "@copilotkit/react-ui"
 import { INVESTMENT_SUGGESTION_PROMPT } from "@/utils/prompts"
 import { ToolLogs } from "./components/tool-logs"
+import { MarketAnalysisPanel } from "./components/market-analysis/market-analysis-panel"
+import { BarChart3, TrendingUp } from "lucide-react"
 
 export interface PortfolioState {
   id: string
@@ -76,6 +78,7 @@ export default function OpenStocksCanvas() {
   const [showComponentTree, setShowComponentTree] = useState(false)
   const [totalCash, setTotalCash] = useState(1000000)
   const [investedAmount, setInvestedAmount] = useState(0)
+  const [activeView, setActiveView] = useState<'portfolio' | 'market-analysis'>('portfolio')
 
   const { state, setState } = useCoAgent({
     name: "agnoAgent",
@@ -320,7 +323,7 @@ export default function OpenStocksCanvas() {
         <PromptPanel availableCash={totalCash} />
       </div>
 
-      {/* Center Panel - Generative Canvas */}
+      {/* Center Panel - Dynamic Content */}
       <div className="flex-1 relative min-w-0">
         {/* Top Bar with Cash Info */}
         <div className="absolute top-0 left-0 right-0 bg-white border-b border-[#D8D8E5] p-4 z-10">
@@ -333,17 +336,46 @@ export default function OpenStocksCanvas() {
           />
         </div>
 
-        {/* <div className="absolute top-4 right-4 z-20">
-          <button
-            onClick={toggleComponentTree}
-            className="px-3 py-1 text-xs font-semibold text-[#575758] bg-white border border-[#D8D8E5] rounded-md hover:bg-[#F0F0F4] transition-colors"
-          >
-            {showComponentTree ? "Hide Tree" : "Show Tree"}
-          </button>
-        </div> */}
+        {/* Navigation Tabs */}
+        <div className="absolute top-20 left-0 right-0 bg-white border-b border-[#D8D8E5] z-10">
+          <div className="flex gap-1 px-4">
+            <button
+              onClick={() => setActiveView('portfolio')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeView === 'portfolio'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6]'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="text-sm font-medium">Portfolio</span>
+            </button>
+            <button
+              onClick={() => setActiveView('market-analysis')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeView === 'market-analysis'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6]'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-sm font-medium">Market Analysis</span>
+            </button>
+          </div>
+        </div>
 
-        <div className="pt-20 h-full">
-          <GenerativeCanvas setSelectedStock={setSelectedStock} portfolioState={currentState} sandBoxPortfolio={sandBoxPortfolio} setSandBoxPortfolio={setSandBoxPortfolio} />
+        {/* Content Area */}
+        <div className="pt-36 h-full">
+          {activeView === 'portfolio' ? (
+            <GenerativeCanvas
+              setSelectedStock={setSelectedStock}
+              portfolioState={currentState}
+              sandBoxPortfolio={sandBoxPortfolio}
+              setSandBoxPortfolio={setSandBoxPortfolio}
+            />
+          ) : (
+            <MarketAnalysisPanel />
+          )}
         </div>
       </div>
 

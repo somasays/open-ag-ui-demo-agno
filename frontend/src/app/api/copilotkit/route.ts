@@ -1,4 +1,4 @@
-@// Import CopilotKit runtime components for AI agent integration
+// Import CopilotKit runtime components for AI agent integration
 import {
   CopilotRuntime, // Core runtime for managing AI agents and conversations
   copilotRuntimeNextJSAppRouterEndpoint, // Next.js App Router integration helper

@@ -2,22 +2,82 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Context7 Integration
+## Documentation-First Development
 
-### Automatic Documentation Lookup
-**Always use Context7 MCP tools proactively** when working with:
+### Mandatory Documentation Review
+**ALWAYS consult project and official documentation before making any changes** to code that involves external libraries, frameworks, or tools:
+
+1. **Project Documentation First**: Check existing project documentation, README files, and implementation patterns
+2. **Official Documentation**: Use Context7 MCP tools to fetch current official library documentation
+3. **Implementation Examples**: Review existing codebase for established patterns and conventions
+4. **Version Compatibility**: Verify library versions and compatibility with current project setup
+
+### Required Documentation Lookup Workflow
+When working with ANY external library, framework, or tool:
+
+**Step 1: Project Research**
+```bash
+# Check existing project usage
+find . -name "*.py" -exec grep -l "library_name" {} \;
+grep -r "library_name" docs/ README.md CLAUDE.md
+```
+
+**Step 2: Official Documentation (Context7)**
+- Automatically resolve library IDs using Context7 MCP tools
+- Fetch comprehensive documentation including:
+  - Latest API reference
+  - Version-specific changes and deprecations
+  - Best practices and recommended patterns
+  - Common pitfalls and troubleshooting
+
+**Step 3: Implementation Validation**
+- Cross-reference official docs with project patterns
+- Ensure version compatibility
+- Test implementation in isolated environment
+- Document any deviations or special considerations
+
+### Context7 MCP Integration
+**Proactively use Context7 MCP tools** for:
 - Code generation requiring library documentation
 - Setup or configuration steps for new libraries
 - API documentation and usage examples
 - Framework-specific patterns and best practices
+- Version upgrade considerations and migration guides
 
-When implementing features or fixing issues that involve external libraries:
+**Documentation Lookup Process:**
 1. Automatically resolve library IDs using Context7 tools
 2. Fetch relevant documentation without explicit user request
 3. Use official documentation to ensure correct implementation
 4. Reference documentation sources in code comments when appropriate
+5. Update project documentation if patterns change
 
-This proactive documentation lookup ensures accurate, up-to-date implementations based on official sources rather than assumptions.
+### Implementation Requirements
+**Before making ANY code changes:**
+- ✅ Have official documentation open and available
+- ✅ Understand current project patterns and conventions
+- ✅ Verify library version compatibility
+- ✅ Review related issue discussions and decisions
+- ✅ Document any new patterns or deviations
+
+**Code Comments Must Include:**
+- Reference to official documentation used
+- Version-specific considerations if applicable
+- Rationale for any deviations from standard patterns
+- Links to relevant project documentation or issues
+
+This documentation-first approach prevents:
+- Using deprecated APIs or patterns
+- Introducing compatibility issues
+- Missing critical best practices
+- Creating inconsistent implementations
+- Duplicating existing solutions
+
+### Proactive Documentation Maintenance
+When discovering documentation gaps or outdated information:
+1. Update relevant project documentation immediately
+2. Document new patterns or conventions established
+3. Create issues for missing documentation
+4. Reference documentation sources in commit messages
 
 ## GitHub Workflow
 
