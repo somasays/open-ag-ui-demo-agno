@@ -30,10 +30,63 @@ from typing import List  # Type hint for list types
 # Import the main stock analysis workflow from our custom module
 from stock_analysis import stock_analysis_workflow
 
+# Import v2 market analysis workflow (optional feature flag)
+try:
+    from market_analysis_v2 import market_analysis_workflow
+    V2_WORKFLOW_AVAILABLE = True
+except ImportError:
+    V2_WORKFLOW_AVAILABLE = False
+
 # Initialize FastAPI application instance
 app = FastAPI()
 
 
+
+
+# MARKET ANALYSIS V2 ENDPOINT: Handle market analysis queries with Agno v2
+# This endpoint uses the new v2 workflow with Steps and Agents
+@app.post("/market-analysis-v2")
+async def market_analysis_v2(input_data: RunAgentInput):
+    """
+    Handle market analysis requests using v2 workflow.
+    This uses Agno v2 patterns with Steps and Agents.
+    """
+    if not V2_WORKFLOW_AVAILABLE:
+        return {"error": "Market Analysis v2 not available"}
+
+    try:
+        # Extract query and portfolio from input
+        query = ""
+        portfolio = []
+
+        # Get the latest user message as query
+        for msg in input_data.messages:
+            if msg.role == "user":
+                query = msg.content
+
+        # Get portfolio from state if available
+        if "investment_portfolio" in input_data.state:
+            portfolio = list(input_data.state["investment_portfolio"].keys())
+
+        # Run the market analysis workflow
+        result = await market_analysis_workflow.arun(
+            additional_data={
+                "query": query,
+                "portfolio": portfolio,
+                "messages": input_data.messages,
+                "available_cash": input_data.state.get("available_cash", 0),
+            }
+        )
+
+        # Return structured response
+        return {
+            "status": "success",
+            "workflow": "market_analysis_v2",
+            "result": result.dict() if hasattr(result, 'dict') else str(result),
+        }
+
+    except Exception as e:
+        return {"error": str(e), "workflow": "market_analysis_v2"}
 
 
 # MAIN API ENDPOINT: Handle stock analysis agent requests
@@ -83,20 +136,43 @@ async def agno_agent(input_data: RunAgentInput):
                 )
             )
             
-            # Step 6: Start the stock analysis workflow as an async task
-            # This runs the entire analysis pipeline in the background
-            agent_task = asyncio.create_task(
-                    stock_analysis_workflow.arun(  # Execute workflow asynchronously
-                    additional_data= {
-                        "tools": input_data.tools,  # Available tools/functions
-                        "messages": input_data.messages,  # Conversation history
-                        "emit_event": emit_event,  # Callback for sending UI updates
-                        "available_cash": input_data.state["available_cash"],  # Cash balance
-                        "investment_portfolio": input_data.state["investment_portfolio"],  # Holdings
-                        "tool_logs": [],  # Initialize logs array
-                    }
+            # Step 6: Determine which workflow to use (v1 or v2)
+            # Check if user requested market analysis (v2) vs stock analysis (v1)
+            use_v2_workflow = False
+            if V2_WORKFLOW_AVAILABLE and input_data.messages:
+                # Check latest user message for market analysis keywords
+                latest_message = input_data.messages[-1].content if input_data.messages[-1].role == "user" else ""
+                market_keywords = ["market analysis", "fed", "inflation", "economic", "news analysis"]
+                use_v2_workflow = any(keyword in latest_message.lower() for keyword in market_keywords)
+
+            # Step 6a: Start the appropriate workflow as an async task
+            if use_v2_workflow:
+                # Use v2 market analysis workflow
+                agent_task = asyncio.create_task(
+                    market_analysis_workflow.arun(
+                        additional_data={
+                            "query": input_data.messages[-1].content if input_data.messages else "",
+                            "portfolio": list(input_data.state.get("investment_portfolio", {}).keys()),
+                            "messages": input_data.messages,
+                            "available_cash": input_data.state["available_cash"],
+                            "emit_event": emit_event,
+                        }
+                    )
                 )
-            )
+            else:
+                # Use v1 stock analysis workflow (default)
+                agent_task = asyncio.create_task(
+                        stock_analysis_workflow.arun(  # Execute workflow asynchronously
+                        additional_data= {
+                            "tools": input_data.tools,  # Available tools/functions
+                            "messages": input_data.messages,  # Conversation history
+                            "emit_event": emit_event,  # Callback for sending UI updates
+                            "available_cash": input_data.state["available_cash"],  # Cash balance
+                            "investment_portfolio": input_data.state["investment_portfolio"],  # Holdings
+                            "tool_logs": [],  # Initialize logs array
+                        }
+                    )
+                )
 
             # Step 7: Stream events from workflow while it's running
             # This loop processes events from the workflow and streams them to client
