@@ -17,20 +17,21 @@ pydantic = ">=2.11.2,<3.0.0"
 
 [[package]]
 name = "agno"
-version = "1.7.7"
+version = "1.8.2"
 description = "Agno: a lightweight library for building Multi-Agent Systems"
 optional = false
 python-versions = "<4,>=3.7"
 groups = ["main"]
 files = [
-    {file = "agno-1.7.7-py3-none-any.whl", hash = "sha256:aef4adaa95bb0caa6e4556b0e0938799495541bb4d59eb8d63dae26b749c4afc"},
-    {file = "agno-1.7.7.tar.gz", hash = "sha256:f0344ae284d971bf5689e6b6eb769f57b7b7548039b40321025c3eafc69698e3"},
+    {file = "agno-1.8.2-py3-none-any.whl", hash = "sha256:2a55a80848bcfe448c09ba1eed41c299a84c2f882e7e3aed145d887cbba88de1"},
+    {file = "agno-1.8.2.tar.gz", hash = "sha256:f8dab74a91cb56d5329d449b236361f1e39d0f1573182cc20912e16db25b6012"},
 ]
 
 [package.dependencies]
 docstring-parser = "*"
 gitpython = "*"
 httpx = "*"
+packaging = "*"
 pydantic = "*"
 pydantic-settings = "*"
 python-dotenv = "*"
@@ -65,7 +66,7 @@ couchbase = ["couchbase"]
 crawl4ai = ["crawl4ai"]
 csv = ["aiofiles"]
 daytona = ["daytona"]
-ddg = ["duckduckgo-search"]
+ddg = ["ddgs"]
 dev = ["fastapi", "mypy", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "ruff", "timeout-decorator", "types-aiofiles", "types-pyyaml", "uvicorn"]
 docker = ["agno-docker"]
 docx = ["python-docx"]
@@ -87,7 +88,7 @@ groq = ["groq"]
 huggingface = ["huggingface-hub"]
 ibm = ["ibm-watsonx-ai"]
 infinity = ["infinity_client"]
-integration-tests = ["Pillow", "duckduckgo-search", "exa_py", "sqlalchemy", "yfinance"]
+integration-tests = ["Pillow", "ddgs", "exa_py", "sqlalchemy", "yfinance"]
 knowledge = ["agno[csv]", "agno[docx]", "agno[markdown]", "agno[pdf]", "agno[text]"]
 lancedb = ["lancedb (==0.20.0)", "tantivy"]
 langfuse = ["langfuse"]
@@ -97,11 +98,13 @@ markdown = ["aiofiles", "markdown", "unstructured"]
 matplotlib = ["matplotlib"]
 mcp = ["mcp"]
 mem0 = ["mem0ai"]
+memori = ["memorisdk"]
 meta = ["llama-api-client"]
 milvusdb = ["pymilvus (>=2.5.10)"]
 mistral = ["mistralai"]
 models = ["agno[anthropic]", "agno[aws-bedrock]", "agno[azure]", "agno[cerebras]", "agno[cohere]", "agno[google]", "agno[groq]", "agno[ibm]", "agno[infinity]", "agno[infinity]", "agno[litellm]", "agno[meta]", "agno[mistral]", "agno[ollama]", "agno[openai]", "agno[portkey]"]
 mongodb = ["pymongo[srv]"]
+neo4j = ["neo4j"]
 newspaper = ["lxml_html_clean", "newspaper4k"]
 ollama = ["ollama"]
 openai = ["openai"]
@@ -126,7 +129,8 @@ surrealdb = ["surrealdb (>=1.0.4)"]
 tests = ["agno[agui]", "agno[cookbooks]", "agno[dev]", "agno[embedders]", "agno[knowledge]", "agno[models]", "agno[performance]", "agno[storage]", "agno[tools]", "agno[vectordbs]", "build", "twine"]
 text = ["aiofiles"]
 todoist = ["todoist-api-python"]
-tools = ["agno[agentql]", "agno[apify]", "agno[arxiv]", "agno[brave]", "agno[browserbase]", "agno[cartesia]", "agno[confluence]", "agno[crawl4ai]", "agno[ddg]", "agno[duckdb]", "agno[elevenlabs]", "agno[evm]", "agno[exa]", "agno[fal]", "agno[firecrawl]", "agno[github]", "agno[gmail]", "agno[google-bigquery]", "agno[googlemaps]", "agno[matplotlib]", "agno[mcp]", "agno[mem0]", "agno[newspaper]", "agno[opencv]", "agno[oxylabs]", "agno[psycopg]", "agno[todoist]", "agno[valyu]", "agno[webex]", "agno[youtube]", "agno[zep]"]
+tools = ["agno[agentql]", "agno[apify]", "agno[arxiv]", "agno[brave]", "agno[browserbase]", "agno[cartesia]", "agno[confluence]", "agno[crawl4ai]", "agno[ddg]", "agno[duckdb]", "agno[elevenlabs]", "agno[evm]", "agno[exa]", "agno[fal]", "agno[firecrawl]", "agno[github]", "agno[gmail]", "agno[google-bigquery]", "agno[googlemaps]", "agno[matplotlib]", "agno[mcp]", "agno[mem0]", "agno[memori]", "agno[neo4j]", "agno[newspaper]", "agno[opencv]", "agno[oxylabs]", "agno[psycopg]", "agno[todoist]", "agno[trafilatura]", "agno[valyu]", "agno[webex]", "agno[youtube]", "agno[zep]"]
+trafilatura = ["trafilatura"]
 valyu = ["valyu"]
 vectordbs = ["agno[cassandra]", "agno[chromadb]", "agno[clickhouse]", "agno[couchbase]", "agno[lancedb]", "agno[milvusdb]", "agno[mongodb]", "agno[pgvector]", "agno[pinecone]", "agno[qdrant]", "agno[singlestore]", "agno[surrealdb]", "agno[weaviate]"]
 weave = ["weave"]
@@ -1966,4 +1970,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4"
-content-hash = "4225ddd5604efe8750ad19edc7ba5d20ef8ceddc83efddc8c50cdeb8f3990266"
+content-hash = "59911deaf97af3d24e5e90a7136ca2f28942d0e7e5ae73e40c8f810d61eefa5c"

@@ -201,18 +201,13 @@ class TestAgentIntegration:
         for agent in agents:
             assert agent.tools == [], f"Agent {agent.name} should not have tools directly"
 
-    @patch('market_analysis_v2.agents.OpenAIChat')
-    def test_model_initialization(self, mock_openai):
+    def test_model_initialization(self):
         """Test that model is properly initialized."""
-        # The module should create a single model instance
-        from importlib import reload
-        import market_analysis_v2.agents
+        # Check that the model has the correct configuration
+        from market_analysis_v2.agents import model
 
-        # Reload module to trigger initialization
-        reload(market_analysis_v2.agents)
-
-        # Should have called OpenAIChat once during module init
-        mock_openai.assert_called_with(id="gpt-4o-mini", temperature=0.7)
+        assert model.id == "gpt-4o-mini"
+        assert model.temperature == 0.7
 
     def test_agent_names_match_workflow_expectations(self):
         """Test agent names match what workflow expects."""

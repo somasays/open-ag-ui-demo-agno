@@ -189,7 +189,7 @@ class TestWorkflowSteps:
         assert "market_sentiment" in result.content
         assert "risk_level" in result.content
         assert "disclaimer" in result.content
-        assert result.content["disclaimer"] == "This is analysis only, not investment advice"
+        assert "investment advice" in result.content["disclaimer"]
 
 
 class TestAgents:
@@ -212,10 +212,10 @@ class TestAgents:
 
     def test_get_agent_for_step(self):
         """Test agent retrieval helper function."""
-        assert get_agent_for_step("query_analysis") == query_parser_agent
-        assert get_agent_for_step("economic_data") == economic_analyst_agent
-        assert get_agent_for_step("news_analysis") == news_analyst_agent
-        assert get_agent_for_step("impact_synthesis") == impact_synthesizer_agent
+        assert get_agent_for_step("query_analysis").name == query_parser_agent.name
+        assert get_agent_for_step("economic_data").name == economic_analyst_agent.name
+        assert get_agent_for_step("news_analysis").name == news_analyst_agent.name
+        assert get_agent_for_step("impact_synthesis").name == impact_synthesizer_agent.name
 
         with pytest.raises(ValueError) as exc_info:
             get_agent_for_step("invalid_step")

@@ -82,6 +82,7 @@ async def execute_query_analysis(step_input: StepInput) -> StepOutput:
             portfolio = step_input.additional_data.get("portfolio", [])
 
         logger.info(f"Analyzing query: {user_query[:100]}...")
+        logger.info(f"Portfolio from additional_data: {portfolio}")
 
         # Use the query parser agent to analyze the query
         analysis_prompt = f"""
@@ -260,6 +261,7 @@ async def execute_impact_synthesis(step_input: StepInput) -> StepOutput:
             portfolio = step_input.additional_data.get("portfolio", [])
 
         logger.info("Synthesizing market analysis insights...")
+        logger.info(f"Portfolio for synthesis: {portfolio}")
 
         # Prepare synthesis context
         synthesis_context = {
@@ -410,6 +412,9 @@ async def create_portfolio_insights(context: Dict, agent: Any) -> Dict:
         # Format portfolio holdings for the prompt
         portfolio_text = ", ".join(portfolio_holdings) if portfolio_holdings else "No specific portfolio provided"
 
+        logger.info(f"Creating portfolio insights for holdings: {portfolio_holdings}")
+        logger.info(f"Portfolio text for prompt: {portfolio_text}")
+
         prompt = f"""
         Synthesize the following market analysis into portfolio insights:
 
@@ -427,29 +432,72 @@ async def create_portfolio_insights(context: Dict, agent: Any) -> Dict:
             prompt
         )
 
-        # Extract content from agent result
-        if hasattr(result, 'content'):
+        # Extract structured content from agent result
+        if hasattr(result, 'content') and hasattr(result.content, 'dict'):
+            # This is a Pydantic model - extract structured data
+            structured_response = result.content
+            return {
+                "executive_summary": structured_response.executive_summary,
+                "economic_impact": structured_response.economic_impact,
+                "market_sentiment": structured_response.market_sentiment,
+                "holdings_analysis": [holding.model_dump() for holding in structured_response.holdings_analysis],
+                "risk_level": structured_response.risk_level,
+                "recommendations": structured_response.recommendations,
+                "disclaimer": structured_response.disclaimer,
+                "timestamp": datetime.now().isoformat(),
+                "structured_output": True,
+            }
+        elif hasattr(result, 'content'):
+            # Fallback: parse text content using existing methods
             insights_content = result.content
+            risk_assessment_text = extract_section(insights_content, ["Risk Assessment"])
+            return {
+                "executive_summary": extract_section(insights_content, ["Executive Summary", "Summary"]),
+                "economic_impact": extract_section(insights_content, ["Economic Impact"]),
+                "market_sentiment": extract_section(insights_content, ["Market Sentiment"]),
+                "holdings_analysis": extract_section(insights_content, ["Holdings Analysis", "Portfolio Analysis"]),
+                "risk_assessment": risk_assessment_text,
+                "risk_level": extract_risk_level(risk_assessment_text),
+                "recommendations": extract_section(insights_content, ["Recommendations"]),
+                "full_analysis": insights_content,
+                "confidence_score": extract_confidence_score(insights_content),
+                "disclaimer": "*This analysis is for informational purposes only and should not be construed as investment advice. Always conduct thorough research or consult with a financial advisor before making investment decisions.*",
+                "timestamp": datetime.now().isoformat(),
+                "structured_output": False,
+            }
         elif isinstance(result, dict):
+            # Handle dictionary result
             insights_content = result.get('content', str(result))
+            risk_assessment_text = extract_section(insights_content, ["Risk Assessment"])
+            return {
+                "executive_summary": extract_section(insights_content, ["Executive Summary", "Summary"]),
+                "economic_impact": extract_section(insights_content, ["Economic Impact"]),
+                "market_sentiment": extract_section(insights_content, ["Market Sentiment"]),
+                "holdings_analysis": extract_section(insights_content, ["Holdings Analysis", "Portfolio Analysis"]),
+                "risk_assessment": risk_assessment_text,
+                "risk_level": extract_risk_level(risk_assessment_text),
+                "recommendations": extract_section(insights_content, ["Recommendations"]),
+                "full_analysis": insights_content,
+                "confidence_score": extract_confidence_score(insights_content),
+                "disclaimer": "*This analysis is for informational purposes only and should not be construed as investment advice. Always conduct thorough research or consult with a financial advisor before making investment decisions.*",
+                "timestamp": datetime.now().isoformat(),
+                "structured_output": False,
+            }
         else:
+            # Handle unexpected result type
             insights_content = str(result)
-
-        # Parse the structured response into expected format
-        risk_assessment_text = extract_section(insights_content, ["Risk Assessment"])
-        return {
-            "executive_summary": extract_section(insights_content, ["Executive Summary", "Summary"]),
-            "economic_impact": extract_section(insights_content, ["Economic Impact"]),
-            "market_sentiment": extract_section(insights_content, ["Market Sentiment"]),
-            "holdings_analysis": extract_section(insights_content, ["Holdings Analysis", "Portfolio Analysis"]),
-            "risk_assessment": risk_assessment_text,
-            "risk_level": extract_risk_level(risk_assessment_text),
-            "recommendations": extract_section(insights_content, ["Recommendations"]),
-            "full_analysis": insights_content,
-            "confidence_score": extract_confidence_score(insights_content),
-            "disclaimer": "*This analysis is for informational purposes only and should not be construed as investment advice. Always conduct thorough research or consult with a financial advisor before making investment decisions.*",
-            "timestamp": datetime.now().isoformat(),
-        }
+            return {
+                "executive_summary": "Analysis unavailable",
+                "economic_impact": "Economic impact analysis unavailable",
+                "market_sentiment": "Market sentiment analysis unavailable",
+                "holdings_analysis": "Holdings analysis unavailable",
+                "risk_level": "MEDIUM",
+                "recommendations": ["Further research recommended"],
+                "disclaimer": "*This analysis is for informational purposes only and should not be construed as investment advice. Always conduct thorough research or consult with a financial advisor before making investment decisions.*",
+                "timestamp": datetime.now().isoformat(),
+                "error": f"Unexpected result type: {type(result)}",
+                "structured_output": False,
+            }
 
     except Exception as e:
         logger.error(f"Error creating portfolio insights: {e}")

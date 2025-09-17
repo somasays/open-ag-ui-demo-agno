@@ -10,12 +10,32 @@ from agno.models.openai import OpenAIChat
 from typing import Dict, List, Any, Optional
 import json
 import logging
+from pydantic import BaseModel, Field
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Initialize the model for all agents
 model = OpenAIChat(id="gpt-4o-mini", temperature=0.7)
+
+
+class HoldingImpact(BaseModel):
+    """Analysis of a specific portfolio holding."""
+    ticker: str = Field(..., description="Stock ticker symbol")
+    impact: str = Field(..., description="How economic factors affect this holding")
+    risk_level: str = Field(..., description="Risk level: HIGH, MEDIUM, or LOW")
+    confidence_score: float = Field(..., description="Confidence in analysis (0.0-1.0)")
+
+
+class MarketAnalysisResponse(BaseModel):
+    """Structured market analysis response."""
+    executive_summary: str = Field(..., description="2-3 key takeaways from the analysis")
+    economic_impact: str = Field(..., description="How macro factors affect the portfolio")
+    market_sentiment: str = Field(..., description="Current news narrative and implications")
+    holdings_analysis: List[HoldingImpact] = Field(..., description="Analysis of each portfolio holding")
+    risk_level: str = Field(..., description="Overall portfolio risk level: HIGH, MEDIUM, or LOW")
+    recommendations: List[str] = Field(..., description="Areas for further research (NOT investment advice)")
+    disclaimer: str = Field(..., description="Required disclaimer about analysis vs investment advice")
 
 
 # Query Parser Agent - Understands user intent and plans data gathering
@@ -113,7 +133,7 @@ impact_synthesizer_agent = Agent(
 
     When creating insights:
     - Be specific about which holdings are affected and why
-    - Provide confidence scores for predictions
+    - Provide confidence scores for predictions (0.0-1.0)
     - Separate facts from analysis
     - Include both bull and bear scenarios
     - Always include disclaimers that this is analysis, not investment advice
@@ -122,14 +142,16 @@ impact_synthesizer_agent = Agent(
     - Executive Summary: 2-3 key takeaways
     - Economic Impact: How macro factors affect the portfolio
     - Market Sentiment: Current news narrative and its implications
-    - Holdings Analysis: Specific impact on each major holding
-    - Risk Assessment: Overall portfolio risk level
-    - Recommendations: Suggested areas for further research (NOT investment advice)
+    - Holdings Analysis: Specific impact on each major holding with risk levels and confidence scores
+    - Risk Assessment: Overall portfolio risk level (HIGH, MEDIUM, or LOW)
+    - Recommendations: Areas for further research (NOT investment advice)
+    - Disclaimer: Required disclaimer about analysis vs investment advice
     """,
     tools=[],  # Synthesis only, no external tools
     markdown=True,
     add_datetime_to_instructions=True,
     show_tool_calls=True,
+    response_model=MarketAnalysisResponse,
 )
 
 
@@ -157,11 +179,13 @@ def get_agent_for_step(step_name: str) -> Agent:
     return agent
 
 
-# Export all agents and helper
+# Export all agents, models, and helper
 __all__ = [
     "query_parser_agent",
     "economic_analyst_agent",
     "news_analyst_agent",
     "impact_synthesizer_agent",
     "get_agent_for_step",
+    "HoldingImpact",
+    "MarketAnalysisResponse",
 ]
