@@ -1,0 +1,1 @@
+"""Test suite for Market Analysis v2 implementation."""
