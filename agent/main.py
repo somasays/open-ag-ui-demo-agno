@@ -195,10 +195,130 @@ async def agno_agent(input_data: RunAgentInput):
                     delta=[{"op": "replace", "path": "/tool_logs", "value": []}],
                 )
             )
-            
+
+            # DEBUG: Print workflow result structure
+            workflow_result = agent_task.result()
+            print(f"DEBUG: Workflow result type: {type(workflow_result)}")
+            print(f"DEBUG: Workflow result attributes: {dir(workflow_result)}")
+
+            if hasattr(workflow_result, 'step_responses'):
+                print(f"DEBUG: Number of step responses: {len(workflow_result.step_responses)}")
+                if workflow_result.step_responses:
+                    last_response = workflow_result.step_responses[-1]
+                    print(f"DEBUG: Last response type: {type(last_response)}")
+                    print(f"DEBUG: Last response content type: {type(last_response.content)}")
+                    print(f"DEBUG: Last response content preview: {str(last_response.content)[:200]}")
+
             # Step 11: Process final workflow results and stream appropriate response
-            # Check if the last message from assistant contains tool calls or text
-            if agent_task.result().step_responses[-1].content['messages'][-1].role == "assistant":
+            # Check workflow type and handle accordingly
+            if use_v2_workflow:
+                # V2 workflow returns synthesis directly as last step
+                if hasattr(workflow_result, 'step_responses') and workflow_result.step_responses:
+                    last_content = workflow_result.step_responses[-1].content
+
+                    # V2 can return synthesis as dict or string
+                    if isinstance(last_content, str):
+                        # V2 returns markdown string directly
+                        synthesis_text = last_content
+
+                        # Send text message events
+                        yield encoder.encode(
+                            TextMessageStartEvent(
+                                type=EventType.TEXT_MESSAGE_START,
+                                message_id=message_id,
+                                role="assistant",
+                            )
+                        )
+
+                        # Stream the synthesis text
+                        for i in range(0, len(synthesis_text), 50):
+                            chunk = synthesis_text[i:i+50]
+                            yield encoder.encode(
+                                TextMessageContentEvent(
+                                    type=EventType.TEXT_MESSAGE_CONTENT,
+                                    message_id=message_id,
+                                    delta=chunk,
+                                )
+                            )
+                            await asyncio.sleep(0.01)
+
+                        yield encoder.encode(
+                            TextMessageEndEvent(
+                                type=EventType.TEXT_MESSAGE_END,
+                                message_id=message_id,
+                            )
+                        )
+                    elif isinstance(last_content, dict):
+                        # Send as text message with formatted synthesis
+                        synthesis_text = f"""
+## Market Analysis Results
+
+**Risk Level**: {last_content.get('risk_level', 'Unknown')}
+
+### Economic Impact
+{last_content.get('economic_impact', 'No economic data available')}
+
+### Market Sentiment
+{last_content.get('market_sentiment', 'No market sentiment available')}
+
+### Portfolio Implications
+{last_content.get('portfolio_implications', 'No specific portfolio implications')}
+
+*{last_content.get('disclaimer', '')}*
+                        """.strip()
+
+                        # Send text message events
+                        yield encoder.encode(
+                            TextMessageStartEvent(
+                                type=EventType.TEXT_MESSAGE_START,
+                                message_id=message_id,
+                                role="assistant",
+                            )
+                        )
+
+                        # Stream the synthesis text
+                        for i in range(0, len(synthesis_text), 50):
+                            chunk = synthesis_text[i:i+50]
+                            yield encoder.encode(
+                                TextMessageContentEvent(
+                                    type=EventType.TEXT_MESSAGE_CONTENT,
+                                    message_id=message_id,
+                                    delta=chunk,
+                                )
+                            )
+                            await asyncio.sleep(0.01)
+
+                        yield encoder.encode(
+                            TextMessageEndEvent(
+                                type=EventType.TEXT_MESSAGE_END,
+                                message_id=message_id,
+                            )
+                        )
+                    else:
+                        # Fallback for unexpected format
+                        print(f"WARNING: Unexpected v2 workflow content format: {type(last_content)}")
+                        yield encoder.encode(
+                            TextMessageStartEvent(
+                                type=EventType.TEXT_MESSAGE_START,
+                                message_id=message_id,
+                                role="assistant",
+                            )
+                        )
+                        yield encoder.encode(
+                            TextMessageContentEvent(
+                                type=EventType.TEXT_MESSAGE_CONTENT,
+                                message_id=message_id,
+                                delta=str(last_content),
+                            )
+                        )
+                        yield encoder.encode(
+                            TextMessageEndEvent(
+                                type=EventType.TEXT_MESSAGE_END,
+                                message_id=message_id,
+                            )
+                        )
+            elif agent_task.result().step_responses[-1].content.get('messages') and \
+                 agent_task.result().step_responses[-1].content['messages'][-1].role == "assistant":
                 if agent_task.result().step_responses[-1].content['messages'][-1].tool_calls:
                     # BRANCH A: Handle tool call responses (charts, analysis, etc.)
                     # for tool_call in state['messages'][-1].tool_calls:

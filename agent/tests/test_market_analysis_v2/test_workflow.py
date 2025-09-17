@@ -16,6 +16,10 @@ os.environ['FRED_API_KEY'] = 'test-fred-key'
 os.environ['EXA_API_KEY'] = 'test-exa-key'
 os.environ['OPENAI_API_KEY'] = 'test-openai-key'
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 # Import StepInput for test mocks
 from agno.workflow.v2 import StepInput
 

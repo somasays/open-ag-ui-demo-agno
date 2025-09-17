@@ -11,6 +11,10 @@ from unittest.mock import Mock, patch, MagicMock
 # Set test environment variables
 os.environ['OPENAI_API_KEY'] = 'test-openai-key'
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from market_analysis_v2.agents import (
     query_parser_agent,
     economic_analyst_agent,

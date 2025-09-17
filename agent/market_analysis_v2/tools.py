@@ -46,7 +46,6 @@ class FredDataTools(Toolkit):
         super().__init__(
             name="fred_data_tools",
             tools=tools,
-            description="Fetch Federal Reserve economic data with error recovery",
             **kwargs
         )
 
@@ -190,7 +189,6 @@ class ExaSearchTools(Toolkit):
         super().__init__(
             name="exa_search_tools",
             tools=tools,
-            description="Neural search for portfolio-relevant market news",
             **kwargs
         )
 
@@ -283,10 +281,12 @@ class ExaSearchTools(Toolkit):
         """
         try:
             # Perform search with Exa
+            # Note: Domain filtering is currently disabled as it's too restrictive
+            # and returns no results for many queries
             search_response = self.exa.search(
                 query,
                 num_results=num_results,
-                include_domains=self.trusted_domains,
+                # include_domains=self.trusted_domains,  # Temporarily disabled
                 use_autoprompt=True,  # Let Exa optimize the query
                 type="neural"  # Use neural search for better relevance
             )

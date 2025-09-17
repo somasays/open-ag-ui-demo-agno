@@ -16,6 +16,10 @@ import pandas as pd
 os.environ['FRED_API_KEY'] = 'test-fred-key'
 os.environ['EXA_API_KEY'] = 'test-exa-key'
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from market_analysis_v2.tools import FredDataTools, ExaSearchTools
 
 
