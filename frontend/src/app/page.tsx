@@ -85,7 +85,16 @@ export default function OpenStocksCanvas() {
     initialState: {
       available_cash: totalCash,
       investment_summary: {} as any,
-      investment_portfolio: [] as InvestmentPortfolio[]
+      investment_portfolio: [] as InvestmentPortfolio[],
+      market_analysis: {
+        economic_data: null,
+        news_analysis: null,
+        portfolio_impact: null,
+        analysis_status: 'idle' as const,
+        query_history: [],
+        errors: []
+      },
+      tool_logs: []
     }
   })
 
@@ -263,6 +272,73 @@ export default function OpenStocksCanvas() {
           </button>
         </>
       )
+    }
+  })
+
+  // Market Analysis Action for handling analysis results
+  useCopilotAction({
+    name: "render_market_analysis",
+    description: "Render comprehensive market analysis results with economic data, news, and portfolio impact",
+    renderAndWaitForResponse: ({ args, respond, status }) => {
+      const results = args as any;
+
+      useEffect(() => {
+        if (results && status !== "complete") {
+          // Update state with analysis results
+          setState(prev => ({
+            ...prev,
+            market_analysis: {
+              ...prev.market_analysis,
+              economic_data: results.economic_data || prev.market_analysis?.economic_data,
+              news_analysis: results.news_analysis || prev.market_analysis?.news_analysis,
+              portfolio_impact: results.portfolio_impact || prev.market_analysis?.portfolio_impact,
+              analysis_status: results.status === 'error' ? 'error' : 'complete',
+              errors: results.errors || [],
+              last_updated: results.timestamp
+            }
+          }));
+        }
+      }, [results, status]);
+
+      return (
+        <div className="p-4 border rounded-lg bg-blue-50 border-blue-200">
+          <h3 className="font-semibold text-blue-900 mb-2">Market Analysis Complete</h3>
+
+          {results?.status === 'error' ? (
+            <div className="flex items-center gap-2 text-red-700 mb-4">
+              <span>Analysis failed. Please try again.</span>
+            </div>
+          ) : results?.status === 'partial' ? (
+            <div className="flex items-center gap-2 text-yellow-700 mb-4">
+              <span>Partial results available. Some data sources failed.</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-green-700 mb-4">
+              <span>Analysis complete! View results in the Market Analysis tab.</span>
+            </div>
+          )}
+
+          {status !== "complete" && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setActiveView('market-analysis');
+                  respond && respond({ accepted: true });
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                View Analysis
+              </button>
+              <button
+                onClick={() => respond && respond({ accepted: false })}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+        </div>
+      );
     }
   })
 
